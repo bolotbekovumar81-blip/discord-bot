@@ -22,6 +22,7 @@ MUTE_ROLE_ID = 1514982507014131828
 ROLE_LOOT_STASH_LIMIT_ID = 1516895512207298680
 ROLE_CUSTOM_ID           = 1507844200211681332
 ROLE_SUMMER_LIMIT_ID     = 1515130377394458644
+ROLE_ZERO_TWO_WIFE_ID = 1520899872243449947
 
 load_dotenv()
 
@@ -2198,6 +2199,173 @@ async def setup_apply(ctx):
         color=discord.Color.red()
     )
     await ctx.send(embed=embed, view=QuestionnaireView())
+
+
+
+COLOR_GIFS = [
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdW5pMHdyenVibXNwd2tzNWx6ZTFidXB0ODdja3AzaTVndDRncnY3dyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Lq0h93752f6J9tijrh/giphy.gif",
+    "https://media.giphy.com/media/11UoE5sGTu978s/giphy.gif"
+]
+
+BW_GIFS = [
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3R6ZXpxZHk5NWh0dXJyd2xsazBka2g3cnd5NzhsZWpqcXNtbWNwaCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/k3m3z6rF609W/giphy.gif"
+]
+
+zero_data = {}
+
+PHRASES = [
+    {"text": "«Ты ведь не сбежишь от меня, да?..»", "type": "gentle", "weight": 15},
+    {"text": "«Я чувствую твой пульс даже отсюда»", "type": "playful", "weight": 15},
+    {"text": "«Сладкий... ты опять смотрел на других?»", "type": "gentle", "weight": 15},
+    {"text": "«Если ты умрёшь — я убью тебя сама»", "type": "sharp", "weight": 15},
+    {"text": "«Помнишь тот день? Я помню всё»", "type": "sad", "weight": 12.5},
+    {"text": "«Ты — мой кусочек счастья... не потеряйся»", "type": "gentle", "weight": 15},
+    {"text": "«Давай сбежим? Туда, где нет ни FRANXX, ни войны»", "type": "playful", "weight": 15},
+    {"text": "«...Ты тоже видишь этот сон?»", "type": "sad", "weight": 12.5},
+]
+
+async def restore_nickname(member: discord.Member, original_nick: str, delay: int = 900):
+    await asyncio.sleep(delay)
+    try:
+        await member.edit(nick=original_nick)
+    except discord.Forbidden:
+        pass
+
+async def remove_eternal_role(member: discord.Member, role: discord.Role, delay: int = 3600):
+    await asyncio.sleep(delay)
+    try:
+        await member.remove_roles(role)
+    except discord.Forbidden:
+        pass
+
+@client.command(name="zero")
+@commands.has_role(ROLE_ZERO_TWO_WIFE_ID)
+async def zero(ctx, *, sub_command: str = None):
+    user_id = ctx.author.id
+    now = time.time()
+
+    if user_id not in zero_data:
+        zero_data[user_id] = {
+            "cooldown": 0,
+            "penalty": 0,
+            "streak": 0,
+            "last_used": 0,
+            "original_nick": ctx.author.display_name
+        }
+
+    udata = zero_data[user_id]
+
+    if sub_command and sub_command.strip().lower() == "молчать":
+        udata["penalty"] = now + 300
+        udata["streak"] = 0
+        emb = discord.Embed(
+            title="💔 Zero Two обиделась...",
+            description=f"{ctx.author.mention}, хмф! Раз так — я с тобой не разговариваю **5 минут**!",
+            color=discord.Color.from_rgb(139, 0, 0)
+        )
+        emb.set_image(url=random.choice(BW_GIFS))
+        await ctx.send(embed=emb)
+        return
+
+    if now < udata["penalty"]:
+        left = int(udata["penalty"] - now)
+        mins, secs = divmod(left, 60)
+        emb = discord.Embed(
+            title="🤐 Зеро Два отвернулась",
+            description=f"{ctx.author.mention}, она всё еще молчит... Подожди `{mins}мин {secs}сек`.",
+            color=discord.Color.dark_gray()
+        )
+        await ctx.send(embed=emb)
+        return
+
+    if now < udata["cooldown"]:
+        left = int(udata["cooldown"] - now)
+        emb = discord.Embed(
+            title="⏳ Не так быстро, Любимый!",
+            description=f"Zero Two переводит дыхание. Подожди еще `{left}` сек.",
+            color=discord.Color.gold()
+        )
+        await ctx.send(embed=emb)
+        return
+    
+    if now - udata["last_used"] <= 60:
+        udata["streak"] += 1
+    else:
+        udata["streak"] = 1
+
+    udata["cooldown"] = now + 30
+    udata["last_used"] = now
+
+    if udata["streak"] == 5:
+        udata["streak"] = 0
+        emb = discord.Embed(
+            title="✨ Секретное откровение ✨",
+            description=f"{ctx.author.mention}\n\n*«Ты тоже ищешь меня в каждой жизни?»*",
+            color=discord.Color.purple()
+        )
+        emb.set_image(url=random.choice(COLOR_GIFS))
+
+        role = discord.utils.get(ctx.guild.roles, name="Вечные")
+        if not role:
+            try:
+                role = await ctx.guild.create_role(name="Вечные", color=discord.Color.purple())
+            except discord.Forbidden:
+                role = None
+
+        if role:
+            try:
+                await ctx.author.add_roles(role)
+                emb.set_footer(text="Тебе выдана секретная роль «Вечные» на 1 час!")
+                asyncio.create_task(remove_eternal_role(ctx.author, role, 3600))
+            except discord.Forbidden:
+                emb.set_footer(text="У бота нет прав для выдачи роли.")
+
+        await ctx.send(embed=emb)
+        return
+    
+    weights = [p["weight"] for p in PHRASES]
+    chosen = random.choices(PHRASES, weights=weights, k=1)[0]
+    p_type = chosen["type"]
+    user_name = ctx.author.name
+
+    if p_type in ["gentle", "playful"]:
+        color = discord.Color.from_rgb(255, 182, 193)
+        gif = random.choice(COLOR_GIFS)
+        new_nick = f"Её пилот {user_name}"
+    elif p_type == "sharp":
+        color = discord.Color.red()
+        gif = random.choice(COLOR_GIFS)
+        new_nick = f"Под колпаком {user_name}"
+    else:
+        color = discord.Color.dark_gray()
+        gif = random.choice(BW_GIFS)
+        new_nick = f"Потерянный {user_name}"
+
+    try:
+        await ctx.author.edit(nick=new_nick[:32])
+        asyncio.create_task(restore_nickname(ctx.author, udata["original_nick"], 900))
+    except discord.Forbidden:
+        pass
+
+    emb = discord.Embed(
+        title="🌸 Zero Two",
+        description=f"{ctx.author.mention}\n\n**{chosen['text']}**",
+        color=color
+    )
+    emb.set_image(url=gif)
+    emb.set_footer(text=f"Прогресс серии: {udata['streak']}/5 | Кулдаун 30с")
+    
+    await ctx.send(embed=emb)
+
+@zero.error
+async def zero_error(ctx, error):
+    if isinstance(error, commands.MissingRole):
+        emb = discord.Embed(
+            title="⛔ Доступ ограничен",
+            description=f"{ctx.author.mention}, эту команду могут использовать только обладатели роли **Zero-two wife💘**!",
+            color=discord.Color.red()
+        )
+        await ctx.send(embed=emb)
 
 client_openai = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
