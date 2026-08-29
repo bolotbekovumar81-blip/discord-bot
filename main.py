@@ -2087,11 +2087,11 @@ def get_user(uid):
         user_data[uid] = {"money": 0, "cases": {"1_summer": 0, "2_summer": 0, "3_summer": 0, "common": 0}, "has_role": False}
     return user_data[uid]
 
-@client.group(name="os")
+@client.group(name="own")
 async def a(ctx):
     pass
 
-@os.group(name="i")
+@own.group(name="i")
 async def i(ctx):
     pass
 
