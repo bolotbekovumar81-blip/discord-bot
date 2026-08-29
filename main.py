@@ -2413,6 +2413,498 @@ async def zero_error(ctx, error):
         )
         await ctx.send(embed=emb)
 
+KISS_GIFS = [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+]
+
+SLAP_GIFS = [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+]
+
+SEX_GIFS = [
+    "h1ttps://cdn.discordapp.com/attachments/1543244547453358101/1543247862043775136/OPHr.gif?ex=6a942d12&is=6a92db92&hm=5b62f72165fc9a17ecb662acb68784c47d8665d54670b2d208c64ee11b717039&",
+    "h2ttps://cdn.discordapp.com/attachments/1543244547453358101/1543247862752747520/rfyr2.gif?ex=6a942d12&is=6a92db92&hm=ec7d32a14208d439e6fa7a040d9023f52c358d73e15355340d52c8a2021169a3&",
+    "h3ttps://cdn.discordapp.com/attachments/1543244547453358101/1543247863382020136/06cd557d.gif?ex=6a942d12&is=6a92db92&hm=a7bf5761a88689946ad7651b6b86622400865d30634da00c77748c39ade30833&",
+    "h4ttps://cdn.discordapp.com/attachments/1543244547453358101/1543247863906173008/1Zgu.gif?ex=6a942d12&is=6a92db92&hm=7b3c7f1de61b3599d38c944581ee33c3759eadcf7be5f1b75bebf1bbfddc553f&",
+    "h5ttps://cdn.discordapp.com/attachments/1543244547453358101/1543247864954880120/6xh4.gif?ex=6a942d13&is=6a92db93&hm=644396b300db64aabdbdac3cb97744c46f6289d86d39dc2269601384601201a1&",
+    "h6ttps://cdn.discordapp.com/attachments/1543244547453358101/1543248024728379422/ai-chan-in-her-waitress-uniform-s1e4-e9-ova2-v0-wzafzyh40hub1.gif?ex=6a942d39&is=6a92dbb9&hm=0d7bf022251e41f398fa0d25c683dfa8d116df40c4e102f2a3c3f2735431b737&",
+    "h7ttps://cdn.discordapp.com/attachments/1543244547453358101/1543248025072435280/anime-love-23.gif?ex=6a942d39&is=6a92dbb9&hm=d021795b09b714361e51f3df2dc470b3b27f0d2441bbaa473a91a154fa9372be&",
+    "h8ttps://cdn.discordapp.com/attachments/1543244547453358101/1543248053777997845/tumblr_n6gbzqv4VX1so56pco2_500.gif?ex=6a942d40&is=6a92dbc0&hm=e73c8b2d5bd2c94396cb7d3648eb5a720c568ae08dac688f4c7a36900afdb62a&",
+    "",
+    ""
+]
+
+MARRY_KISS_GIFS = [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+]
+
+MARRY_SEX_GIFS = [
+    "h1ttps://cdn.discordapp.com/attachments/1543244547453358101/1543247862043775136/OPHr.gif?ex=6a942d12&is=6a92db92&hm=5b62f72165fc9a17ecb662acb68784c47d8665d54670b2d208c64ee11b717039&",
+    "h2ttps://cdn.discordapp.com/attachments/1543244547453358101/1543247862752747520/rfyr2.gif?ex=6a942d12&is=6a92db92&hm=ec7d32a14208d439e6fa7a040d9023f52c358d73e15355340d52c8a2021169a3&",
+    "h3ttps://cdn.discordapp.com/attachments/1543244547453358101/1543247863382020136/06cd557d.gif?ex=6a942d12&is=6a92db92&hm=a7bf5761a88689946ad7651b6b86622400865d30634da00c77748c39ade30833&",
+    "h4ttps://cdn.discordapp.com/attachments/1543244547453358101/1543247863906173008/1Zgu.gif?ex=6a942d12&is=6a92db92&hm=7b3c7f1de61b3599d38c944581ee33c3759eadcf7be5f1b75bebf1bbfddc553f&",
+    "h5ttps://cdn.discordapp.com/attachments/1543244547453358101/1543247864954880120/6xh4.gif?ex=6a942d13&is=6a92db93&hm=644396b300db64aabdbdac3cb97744c46f6289d86d39dc2269601384601201a1&",
+    "h6ttps://cdn.discordapp.com/attachments/1543244547453358101/1543248024728379422/ai-chan-in-her-waitress-uniform-s1e4-e9-ova2-v0-wzafzyh40hub1.gif?ex=6a942d39&is=6a92dbb9&hm=0d7bf022251e41f398fa0d25c683dfa8d116df40c4e102f2a3c3f2735431b737&",
+    "h7ttps://cdn.discordapp.com/attachments/1543244547453358101/1543248025072435280/anime-love-23.gif?ex=6a942d39&is=6a92dbb9&hm=d021795b09b714361e51f3df2dc470b3b27f0d2441bbaa473a91a154fa9372be&",
+    "h8ttps://cdn.discordapp.com/attachments/1543244547453358101/1543248053777997845/tumblr_n6gbzqv4VX1so56pco2_500.gif?ex=6a942d40&is=6a92dbc0&hm=e73c8b2d5bd2c94396cb7d3648eb5a720c568ae08dac688f4c7a36900afdb62a&",
+    "",
+    ""
+]
+
+MARRY_SLAP_GIFS = [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+]
+
+@client.command(name="kiss")
+async def kiss_cmd(ctx, member: discord.Member):
+    if member == ctx.author:
+        await ctx.send(f"{ctx.author.mention}, целуйся с кем-нибудь другим ❤️")
+        return
+    emb = discord.Embed(description=f"{ctx.author.mention} поцеловал {member.mention}", color=discord.Color.pink())
+    emb.set_image(url=random.choice(KISS_GIFS))
+    await ctx.send(embed=emb)
+
+
+@client.command(name="slap")
+async def slap_cmd(ctx, member: discord.Member):
+    if member == ctx.author:
+        await ctx.send(f"{ctx.author.mention} дал сам себе пощечину. Больно же!")
+        return
+    emb = discord.Embed(description=f"{ctx.author.mention} дал пощечину {member.mention} 💢", color=discord.Color.red())
+    emb.set_image(url=random.choice(SLAP_GIFS))
+    await ctx.send(embed=emb)
+
+
+@client.command(name="sex")
+async def sex_cmd(ctx, member: discord.Member):
+    if member == ctx.author:
+        await ctx.send(f"{ctx.author.mention}, с самим собой нельзя!")
+        return
+    emb = discord.Embed(description=f"{ctx.author.mention} трахнул {member.mention}", color=discord.Color.purple())
+    emb.set_image(url=random.choice(SEX_GIFS))
+    await ctx.send(embed=emb)
+
+@client.group(name="marry", invoke_without_command=True)
+async def marry(ctx):
+    await ctx.send(f"{ctx.author.mention}, используй: `!marry menu`, `!marry propose @user`, `!marry accept`, `!marry deny`, `!marry divorce`, `!marry level up`, `!marry level info`, `!marry child guardianship @user`")
+
+pending_proposals = {}
+divorce_requests = {}
+user_cooldowns = {}
+
+MARRY_FILE = "marry.json"
+
+def load_marry_data():
+    if not os.path.exists(MARRY_FILE):
+        return {}
+    try:
+        with open(MARRY_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_marry_data(data):
+    with open(MARRY_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+def check_marriage_cooldown(user_id, action_type):
+    now = time.time()
+    key = f"{user_id}_{action_type}"
+    last_time = user_cooldowns.get(key, 0)
+    if now - last_time < 600:  # 10 минут
+        return int(600 - (now - last_time))
+    user_cooldowns[key] = now
+    return 0
+
+@marry.command(name="menu")
+async def marry_menu(ctx, member: discord.Member = None):
+    target = member or ctx.author
+    data = load_marry_data()
+    user_id = str(target.id)
+
+    if user_id not in data or not data[user_id].get("spouse"):
+        await ctx.send(f"У {target.mention} нет второй половинки.")
+        return
+
+    spouse_id = data[user_id]["spouse"]
+    spouse_member = ctx.guild.get_member(int(spouse_id))
+    spouse_name = spouse_member.name if spouse_member else "Партнер"
+    target_name = target.name
+
+    spouse_obj = data[user_id]
+    level = spouse_obj.get("level", 1)
+    points = spouse_obj.get("love_points", 0)
+    date = spouse_obj.get("date", "Неизвестно")
+    child_id = spouse_obj.get("child")
+
+    child_member = ctx.guild.get_member(int(child_id)) if child_id else None
+    child_text = child_member.mention if child_member else "Детей пока нет."
+
+    needed_points = LEVEL_REQUIREMENTS.get(level, 50)
+    progress_in_level = min(points, needed_points)
+    
+    filled_hearts = min(10, int((progress_in_level / needed_points) * 10)) if needed_points > 0 else 10
+    empty_hearts = 10 - filled_hearts
+    bar = "❤️" * filled_hearts + "🤍" * empty_hearts
+
+    emb = discord.Embed(
+        description=(
+            f"❤️ **Семейный союз:**\n"
+            f"**{target_name} & {spouse_name}**\n\n"
+            f"Прогресс до {level + 1} уровня:\n"
+            f"{bar}\n"
+            f"({points}/{needed_points})\n\n"
+            f"💍 Партнер 1\n"
+            f"{target.mention} ♀️\n\n"
+            f"💍 Партнер 2\n"
+            f"{spouse_member.mention if spouse_member else '<@' + spouse_id + '>'} ♂️\n\n"
+            f"📈 Уровень\n"
+            f"{level}\n\n"
+            f"❤️ Очки Любви\n"
+            f"{points}\n\n"
+            f"📅 Дата Свадьбы\n"
+            f"{date}\n\n"
+            f"👥 Дети\n"
+            f"{child_text}"
+        ),
+        color=discord.Color.from_rgb(255, 105, 180)
+    )
+    emb.set_thumbnail(url=target.display_avatar.url)
+    await ctx.send(embed=emb)
+
+@marry.command(name="kiss")
+async def marry_kiss(ctx, member: discord.Member):
+    if member == ctx.author:
+        await ctx.send(f"{ctx.author.mention}, целуйся с кем-нибудь другим ❤️")
+        return
+
+    left = check_marriage_cooldown(ctx.author.id, "kiss")
+    if left > 0:
+        mins, secs = divmod(left, 60)
+        await ctx.send(f"⏳ Подожди еще `{mins} мин {secs} сек` перед следующим семейным поцелуем.")
+        return
+
+    data = load_marry_data()
+    author_id = str(ctx.author.id)
+    target_id = str(member.id)
+
+    is_married = (author_id in data and data[author_id].get("spouse") == target_id)
+
+    desc = f"{ctx.author.mention} поцеловал {member.mention}"
+    if is_married:
+        data[author_id]["love_points"] = data[author_id].get("love_points", 0) + 1
+        data[target_id]["love_points"] = data[target_id].get("love_points", 0) + 1
+        save_marry_data(data)
+        desc += "\n+ 1 очко любви ❤️"
+    else:
+        desc += "\n*(Очко любви не засчитано, так как вы не состоите в браке)*"
+
+    emb = discord.Embed(description=desc, color=discord.Color.pink())
+    emb.set_image(url=random.choice(MARRY_KISS_GIFS))
+    await ctx.send(embed=emb)
+
+
+@marry.command(name="sex")
+async def marry_sex(ctx, member: discord.Member):
+    if member == ctx.author:
+        await ctx.send(f"{ctx.author.mention}, с самим собой нельзя!")
+        return
+
+    left = check_marriage_cooldown(ctx.author.id, "sex")
+    if left > 0:
+        mins, secs = divmod(left, 60)
+        await ctx.send(f"⏳ Подожди еще `{mins} мин {secs} сек` перед следующим разом.")
+        return
+
+    data = load_marry_data()
+    author_id = str(ctx.author.id)
+    target_id = str(member.id)
+
+    is_married = (author_id in data and data[author_id].get("spouse") == target_id)
+
+    desc = f"{ctx.author.mention} трахнул {member.mention}"
+    if is_married:
+        data[author_id]["love_points"] = data[author_id].get("love_points", 0) + 1
+        data[target_id]["love_points"] = data[target_id].get("love_points", 0) + 1
+        save_marry_data(data)
+        desc += "\n+ 1 очко любви ❤️"
+    else:
+        desc += "\n*(Очко любви не засчитано, так как вы не состоите в браке друг с другом)*"
+
+    emb = discord.Embed(description=desc, color=discord.Color.purple())
+    emb.set_image(url=random.choice(MARRY_SEX_GIFS))
+    await ctx.send(embed=emb)
+
+
+@marry.command(name="slap")
+async def marry_slap(ctx, member: discord.Member):
+    if member == ctx.author:
+        await ctx.send(f"{ctx.author.mention} дал сам себе пощечину. Больно же!")
+        return
+
+    left = check_marriage_cooldown(ctx.author.id, "slap")
+    if left > 0:
+        mins, secs = divmod(left, 60)
+        await ctx.send(f"⏳ Подожди еще `{mins} мин {secs} сек` перед следующей пощечиной.")
+        return
+
+    data = load_marry_data()
+    author_id = str(ctx.author.id)
+    target_id = str(member.id)
+
+    is_married = (author_id in data and data[author_id].get("spouse") == target_id)
+
+    desc = f"{ctx.author.mention} дал пощечину {member.mention} 💢"
+    if is_married:
+        data[author_id]["love_points"] = data[author_id].get("love_points", 0) + 1
+        data[target_id]["love_points"] = data[target_id].get("love_points", 0) + 1
+        save_marry_data(data)
+        desc += "\n+ 1 очко любви ❤️"
+    else:
+        desc += "\n*(Очко любви не засчитано, так как вы не состоите в браке)*"
+
+    emb = discord.Embed(description=desc, color=discord.Color.red())
+    emb.set_image(url=random.choice(MARRY_SLAP_GIFS))
+    await ctx.send(embed=emb)
+
+@marry.command(name="divorce")
+async def marry_divorce(ctx):
+    data = load_marry_data()
+    user_id = str(ctx.author.id)
+
+    if user_id not in data or not data[user_id].get("spouse"):
+        await ctx.send("Вы не состоите в браке.")
+        return
+
+    spouse_id = data[user_id]["spouse"]
+
+    if user_id not in divorce_requests:
+        divorce_requests[user_id] = spouse_id
+
+    if spouse_id in divorce_requests and divorce_requests[spouse_id] == user_id:
+        if user_id in data: del data[user_id]
+        if spouse_id in data: del data[spouse_id]
+        save_marry_data(data)
+
+        divorce_requests.pop(user_id, None)
+        divorce_requests.pop(spouse_id, None)
+
+        await ctx.send("💔 Брак был расторгнут по обоюдному согласию сторон.")
+    else:
+        await ctx.send(f"⚠️ Вы запросили развод. Ваш партнер должен тоже написать `!marry divorce`, чтобы подтвердить расторжение брака.")
+
+@marry.command(name="deny")
+async def marry_deny(ctx):
+    user_id = str(ctx.author.id)
+    if user_id not in pending_proposals:
+        await ctx.send("У вас нет активных предложений о браке.")
+        return
+
+    del pending_proposals[user_id]
+    await ctx.send(f"{ctx.author.mention} отклонил(а) предложение о браке. 💔")
+
+@marry.command(name="accept")
+async def marry_accept(ctx):
+    user_id = str(ctx.author.id)
+    if user_id not in pending_proposals:
+        await ctx.send("У вас нет активных предложений о браке.")
+        return
+
+    proposal = pending_proposals[user_id]
+    if time.time() - proposal["time"] > 180:
+        del pending_proposals[user_id]
+        await ctx.send("Время предложения истекло (прошло больше 3 минут).")
+        return
+
+    proposer_id = proposal["proposer"]
+    del pending_proposals[user_id]
+
+    data = load_marry_data()
+    date_str = datetime.now().strftime("%d %B %Y г.")
+
+    data[proposer_id] = {
+        "spouse": user_id,
+        "level": 1,
+        "love_points": 0,
+        "date": date_str,
+        "child": None
+    }
+    data[user_id] = {
+        "spouse": proposer_id,
+        "level": 1,
+        "love_points": 0,
+        "date": date_str,
+        "child": None
+    }
+    save_marry_data(data)
+
+    proposer_member = ctx.guild.get_member(int(proposer_id))
+    p_name = proposer_member.mention if proposer_member else "Партнер"
+    await ctx.send(f"🎉 Поздравляем! {p_name} и {ctx.author.mention} теперь официально в браке! 💖")
+
+@marry.command(name="propose")
+async def marry_propose(ctx, member: discord.Member):
+    if member == ctx.author or member.bot:
+        await ctx.send("Нельзя сделать предложение самому себе или боту!")
+        return
+
+    data = load_marry_data()
+    author_id = str(ctx.author.id)
+    target_id = str(member.id)
+
+    if author_id in data and data[author_id].get("spouse"):
+        await ctx.send("У тебя уже есть пара!")
+        return
+    if target_id in data and data[target_id].get("spouse"):
+        await ctx.send("У этого пользователя уже есть пара!")
+        return
+
+    pending_proposals[target_id] = {
+        "proposer": author_id,
+        "time": time.time()
+    }
+
+    await ctx.send(f"💍 {member.mention}, вам сделал предложение пользователь {ctx.author.mention}! У вас есть **3 минуты**, чтобы ответить `!marry accept` или `!marry deny`.")
+
+LEVEL_REQUIREMENTS = {
+    1: 15,
+    2: 20,
+    3: 30,
+    4: 40,
+    5: 50
+}
+
+@marry.command(name="level")
+async def marry_level(ctx, sub: str = None):
+    if sub == "info":
+        emb = discord.Embed(
+            title="📈 Информация об уровнях любви",
+            description=(
+                "📊 **Требования для повышения:**\n"
+                "• **1 уровень:** 15 любви\n"
+                "• **2 уровень:** 20 любви\n"
+                "• **3 уровень:** 30 любви\n"
+                "• **4 уровень:** 40 любви\n"
+                "• **5 уровень:** 50 любви\n\n"
+                "Используй `!marry level up` для повышения!"
+            ),
+            color=discord.Color.gold()
+        )
+        await ctx.send(embed=emb)
+    elif sub == "up":
+        data = load_marry_data()
+        user_id = str(ctx.author.id)
+        if user_id not in data or not data[user_id].get("spouse"):
+            await ctx.send("Вы не состоите в браке.")
+            return
+
+        current_level = data[user_id].get("level", 1)
+        points = data[user_id].get("love_points", 0)
+        needed = LEVEL_REQUIREMENTS.get(current_level, None)
+
+        if needed is None:
+            await ctx.send("У вас уже максимальный уровень!")
+            return
+
+        if points >= needed:
+            spouse_id = data[user_id]["spouse"]
+            data[user_id]["level"] = current_level + 1
+            if spouse_id in data:
+                data[spouse_id]["level"] = current_level + 1
+            save_marry_data(data)
+            await ctx.send(f"✨ Поздравляем! Ваш семейный союз повысил уровень до **{current_level + 1}**! 🎉")
+        else:
+            await ctx.send(f"❌ Недостаточно очков любви! Нужно `{needed}`, а у вас `{points}`.")
+    else:
+        await ctx.send("Используй: `!marry level info` или `!marry level up`")
+
+child_proposals = {}
+
+@marry.group(name="child", invoke_without_command=True)
+async def marry_child(ctx):
+    await ctx.send("Используй: `!marry child guardianship @user`, `!marry child g accept`, `!marry child g deny`")
+
+@marry_child.command(name="guardianship")
+async def child_guardianship(ctx, member: discord.Member):
+    data = load_marry_data()
+    user_id = str(ctx.author.id)
+    if user_id not in data or not data[user_id].get("spouse"):
+        await ctx.send("У вас нет семьи, чтобы взять ребенка под опеку.")
+        return
+
+    target_id = str(member.id)
+    child_proposals[target_id] = {
+        "parent": user_id,
+        "time": time.time()
+    }
+    await ctx.send(f"👶 {member.mention}, семейная пара предлагает вам стать их ребенком под опекой! У вас есть **3 минуты**, чтобы написать `!marry child g accept` или `!marry child g deny`.")
+
+@marry_child.command(name="g")
+async def child_g_sub(ctx, action: str):
+    user_id = str(ctx.author.id)
+    if user_id not in child_proposals:
+        await ctx.send("У вас нет активных предложений об опеке.")
+        return
+
+    prop = child_proposals[user_id]
+    if time.time() - prop["time"] > 180:
+        del child_proposals[user_id]
+        await ctx.send("Время предложения истекло (прошло больше 3 минут).")
+        return
+
+    parent_id = prop["parent"]
+    del child_proposals[user_id]
+
+    data = load_marry_data()
+
+    if action == "accept":
+        spouse_id = data[parent_id]["spouse"]
+        data[parent_id]["child"] = user_id
+        if spouse_id in data:
+            data[spouse_id]["child"] = user_id
+        save_marry_data(data)
+        await ctx.send(f"🎉 Поздравляем! Теперь {ctx.author.mention} официально усыновлен(а) этой семейной парой! 🍼")
+    elif action == "deny":
+        await ctx.send(f"{ctx.author.mention} отклонил предложение об опеке.")
+    else:
+        await ctx.send("Используй `!marry child g accept` или `!marry child g deny`.")
+
 client_openai = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 ALLOWED_CHANNEL_ID = int(os.getenv("CHANNEL_ID")) 
