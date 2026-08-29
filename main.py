@@ -2088,7 +2088,7 @@ def get_user(uid):
     return user_data[uid]
 
 @client.group(name="own")
-async def a(ctx):
+async def own(ctx):
     pass
 
 @own.group(name="i")
