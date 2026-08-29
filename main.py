@@ -2087,11 +2087,11 @@ def get_user(uid):
         user_data[uid] = {"money": 0, "cases": {"1_summer": 0, "2_summer": 0, "3_summer": 0, "common": 0}, "has_role": False}
     return user_data[uid]
 
-@client.group(name="a")
+@client.group(name="os")
 async def a(ctx):
     pass
 
-@a.group(name="i")
+@os.group(name="i")
 async def i(ctx):
     pass
 
@@ -2254,7 +2254,7 @@ async def setup_apply(ctx):
 ZERO_GIFS = [
     "https://cdn.discordapp.com/attachments/1505813045249708144/1542980597184593940/bc11809c97271e15b7495b7ccd880ab7_1.gif?ex=6a93dce9&is=6a928b69&hm=e76eab60756985cb087eb8a52478c8fdd09f4f469a0a1292ea6d11b3b95b2b84&",
     "https://cdn.discordapp.com/attachments/1505813045249708144/1542980621318750208/5583320e11154c207f54711a927e9526.gif?ex=6a93dcef&is=6a928b6f&hm=06a0c93492cc8cee69da149329a832592a17863314b78534c09ba8c2eae263c3&",
-    "https://cdn.discordapp.com/attachments/1505813045249708144/1542980780853297202/4db3008dea23de3f36b1d588b0f5f4df.gif?ex=6a93dd15&is=6a928b95&hm=394cd136b0d46c4c1534beb9aab984834e6d583cdce61e5c18ae6518690dd52c&",
+    "httаps://cdn.discordapp.com/attachments/1505813045249708144/1542980780853297202/4db3008dea23de3f36b1d588b0f5f4df.gif?ex=6a93dd15&is=6a928b95&hm=394cd136b0d46c4c1534beb9aab984834e6d583cdce61e5c18ae6518690dd52c&",
     "https://cdn.discordapp.com/attachments/1505813045249708144/1542980798641213553/cef569820773b0f5d54ee34cfa18e1f8.gif?ex=6a93dd19&is=6a928b99&hm=3e5fca11fc11468ef80660854d1e035ce6c6533817d81e81f16078ee0113e6db&",
     "https://cdn.discordapp.com/attachments/1505813045249708144/1542981001817493626/zero-two.gif?ex=6a93dd4a&is=6a928bca&hm=f6f3760ba67da49f05b8890788887d3e808081f812c50f6b70806de9d57c0737&",
     "https://cdn.discordapp.com/attachments/1505813045249708144/1542981252137623582/8677b01b4e5837808a3d4eae3d878557.gif?ex=6a93dd85&is=6a928c05&hm=2951bcb4fb9c8cc76c884c48805f998e9040958a0567dd0147c92e4c57ecbb53&",
