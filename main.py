@@ -83,10 +83,29 @@ async def sayhello(interaction: discord.Interaction):
 @client.tree.command(name="printer", description="пишу")
 async def printer(interaction: discord.Interaction, printer: str):
     await interaction.response.send_message(printer)
-    
-@client.command(name="mute")
+
+def ensure_json_files():
+    if not os.path.exists("warns.json"):
+        with open("warns.json", "w", encoding="utf-8") as f:
+            json.dump({}, f)
+
+@client.group(name="a", invoke_without_command=True)
+async def admin_group(ctx):
+    embed = discord.Embed(
+        title="🛡️ Панель административных команд",
+        description="Используй нужную подкоманду с префиксом `!a`:",
+        color=discord.Color.blue()
+    )
+    embed.add_field(
+        name="Доступные команды модерации:",
+        value="`mute`, `unmute`, `ban`, `unban`, `kick`, `warn`, `unwarn`, `warn_list`",
+        inline=False
+    )
+    await ctx.send(embed=embed)
+
+@admin_group.command(name="mute", help="Выдать мут участнику (!a mute @user [время] [s/m/h/d] [причина])")
 @commands.has_permissions(moderate_members=True)
-async def mute(ctx, member: discord.Member, time: int, unit: str, *, reason: str = "Без причины"):
+async def admin_mute(ctx, member: discord.Member, time: int, unit: str, *, reason: str = "Без причины"):
     try:
         if ctx.author.top_role <= member.top_role and ctx.guild.owner_id != ctx.author.id:
             await ctx.send("❌ У участника роль выше или равна вашей!")
@@ -106,22 +125,39 @@ async def mute(ctx, member: discord.Member, time: int, unit: str, *, reason: str
         elif unit == "d":
             seconds = time * 86400
             unit_text = "дн."
+        else:
+            await ctx.send("❌ Неверный формат времени! Используйте: `s` (сек), `m` (мин), `h` (час), `d` (дн).")
+            return
 
         duration = datetime.timedelta(seconds=seconds)
         await member.timeout(duration, reason=reason)
 
         emb = discord.Embed(title=f"⏳ Участнику выдан мут на {time} {unit_text}", color=discord.Color.orange())
-        emb.add_field(name="Модератор", value=ctx.author.mention)
-        emb.add_field(name="Нарушитель", value=member.mention)
+        emb.add_field(name="Модератор", value=ctx.author.mention, inline=True)
+        emb.add_field(name="Нарушитель", value=member.mention, inline=True)
         emb.add_field(name="Причина", value=reason, inline=False)
         emb.timestamp = datetime.datetime.utcnow()
         await ctx.send(embed=emb)
     except Exception as e:
         await ctx.send(f"❌ Ошибка при выдаче мута: {e}")
   
-@client.command(name="ban")
+@admin_group.command(name="unmute", help="Снять мут с участника (!a unmute @user [причина])")
+@commands.has_permissions(moderate_members=True)
+async def admin_unmute(ctx, member: discord.Member, *, reason: str = "Без причины"):
+    try:
+        await member.timeout(None, reason=reason)
+        emb = discord.Embed(title="🔊 С участника снят мут", color=discord.Color.green())
+        emb.add_field(name="Модератор", value=ctx.author.mention, inline=True)
+        emb.add_field(name="Участник", value=member.mention, inline=True)
+        emb.add_field(name="Причина снятия", value=reason, inline=False)
+        emb.timestamp = datetime.datetime.utcnow()
+        await ctx.send(embed=emb)
+    except Exception as e:
+        await ctx.send(f"❌ Ошибка при размуте: {e}")
+  
+@admin_group.command(name="ban", help="Забанить участника навсегда или на время (!a ban @user [время] [m/h/d] [причина])")
 @commands.has_permissions(ban_members=True)
-async def ban(ctx, member: discord.Member, time: int = None, unit: str = None, *, reason: str = "Не указана"):
+async def admin_ban(ctx, member: discord.Member, time: int = None, unit: str = None, *, reason: str = "Не указана"):
     try:
         if ctx.author.top_role <= member.top_role and ctx.guild.owner_id != ctx.author.id:
             await ctx.send("❌ У игрока роль выше или равна вашей!")
@@ -132,6 +168,9 @@ async def ban(ctx, member: discord.Member, time: int = None, unit: str = None, *
             if unit == "m": sec, txt = time * 60, "мин."
             elif unit == "h": sec, txt = time * 3600, "час."
             elif unit == "d": sec, txt = time * 86400, "дн."
+            else:
+                await ctx.send("❌ Неверный формат единицы времени для бана (`m`, `h`, `d`).")
+                return
             await member.ban(reason=f"Бан на {time} {txt}. Причина: {reason}")
             tit = f"⏳ Выдан временный бан на {time} {txt}"
         else:
@@ -139,42 +178,57 @@ async def ban(ctx, member: discord.Member, time: int = None, unit: str = None, *
             tit = "🔨 Участник забанен навсегда"
             
         emb = discord.Embed(title=tit, color=discord.Color.red())
-        emb.add_field(name="Модератор", value=ctx.author.mention)
-        emb.add_field(name="Нарушитель", value=member.mention)
+        emb.add_field(name="Модератор", value=ctx.author.mention, inline=True)
+        emb.add_field(name="Нарушитель", value=member.mention, inline=True)
         emb.add_field(name="Причина", value=reason, inline=False)
-        emb.timestamp = datetime.datetime.now()
+        emb.timestamp = datetime.datetime.utcnow()
         await ctx.send(embed=emb)
         
         if sec > 0:
             await asyncio.sleep(sec)
             try:
                 await ctx.guild.unban(member, reason="Время бана истекло")
-                un = discord.Embed(title="🕊️ Время бана истекло", description=f"{member.mention} разбанен.", color=discord.Color.green())
+                un = discord.Embed(title="🕊️ Время бана истекло", description=f"{member.mention} был автоматически разбанен.", color=discord.Color.green())
                 await ctx.send(embed=un)
             except discord.NotFound:
                 pass
     except Exception as e:
-        await ctx.send(f"❌ Ошибка: {e}")
-        
-@client.tree.command(name="kick", description="Кикнуть пользователя с сервера")
-@app_commands.default_permissions(kick_members=True)
-@app_commands.checks.has_permissions(kick_members=True)
-async def kick(interaction: discord.Interaction, member: discord.Member, reason: str):
+        await ctx.send(f"❌ Ошибка при бане: {e}")
+
+@admin_group.command(name="unban", help="Разбанить пользователя по ID (!a unban [ID] [причина])")
+@commands.has_permissions(ban_members=True)
+async def admin_unban(ctx, user_id: int, *, reason: str = "Без причины"):
     try:
-        if interaction.user.top_role <= member.top_role and interaction.guild.owner_id != interaction.user.id:
-            await interaction.response.send_message("❌ Вы не можете кикнуть участника с ролью выше или равной вашей!", ephemeral=True)
+        user = await client.fetch_user(user_id)
+        await ctx.guild.unban(user, reason=reason)
+        emb = discord.Embed(title="🤝 Пользователь успешно разбанен", color=discord.Color.green())
+        emb.add_field(name="Модератор", value=ctx.author.mention, inline=True)
+        emb.add_field(name="Пользователь", value=user.mention, inline=True)
+        emb.add_field(name="Причина разбана", value=reason, inline=False)
+        emb.timestamp = datetime.datetime.utcnow()
+        await ctx.send(embed=emb)
+    except discord.NotFound:
+        await ctx.send("❌ Этот пользователь не найден в списке банов сервера!")
+    except Exception as e:
+        await ctx.send(f"❌ Ошибка при разбане: {e}")
+        
+@admin_group.command(name="kick", help="Кикнуть участника с сервера (!a kick @user [причина])")
+@commands.has_permissions(kick_members=True)
+async def admin_kick(ctx, member: discord.Member, *, reason: str = "Без причины"):
+    try:
+        if ctx.author.top_role <= member.top_role and ctx.guild.owner_id != ctx.author.id:
+            await ctx.send("❌ Вы не можете кикнуть участника с ролью выше или равной вашей!")
             return
 
         await member.kick(reason=reason)
-
         emb = discord.Embed(title="👢 Участник кикнут с сервера", color=discord.Color.red())
-        emb.add_field(name="Модератор", value=interaction.user.mention)
-        emb.add_field(name="Нарушитель", value=member.mention)
+        emb.add_field(name="Модератор", value=ctx.author.mention, inline=True)
+        emb.add_field(name="Нарушитель", value=member.mention, inline=True)
         emb.add_field(name="Причина", value=reason, inline=False)
-        
-        await interaction.response.send_message(embed=emb)
+        emb.timestamp = datetime.datetime.utcnow()
+        await ctx.send(embed=emb)
     except Exception as e:
-        await interaction.response.send_message(f"❌ Ошибка при кике: {e}", ephemeral=True)
+        await ctx.send(f"❌ Ошибка при кике: {e}")
 
 @client.command(name="clear")
 @commands.has_any_role("Персонал", "Старший персонал")
@@ -192,49 +246,13 @@ async def clear_error(ctx, error):
     elif isinstance(error, commands.CommandInvokeError):
         await ctx.send("У меня нет прав на управление сообщениями. Проверьте настройки канала/бота")
 
-@client.command(name="unban")
-@commands.has_permissions(ban_members=True)
-async def unban(ctx, user_id: int, *, reason: str = "Без причины"):
-    try:
-        user = await client.fetch_user(user_id)
-        await ctx.guild.unban(user, reason=reason)
-
-        emb = discord.Embed(title="🤝 Пользователь успешно разбанен", color=discord.Color.green())
-        emb.add_field(name="Модератор", value=ctx.author.mention)
-        emb.add_field(name="Пользователь", value=user.mention)
-        emb.add_field(name="Причина разбана", value=reason, inline=False)
-        
-        await ctx.send(embed=emb)
-    except discord.NotFound:
-        await ctx.send("❌ Этот пользователь не найден в списке банов сервера!")
-    except Exception as e:
-        await ctx.send(f"❌ Ошибка при разбане: {e}")
-
-@client.command(name="unmute")
-@commands.has_permissions(moderate_members=True)
-async def unmute(ctx, member: discord.Member, *, reason: str = "Без причины"):
-    try:
-        await member.timeout(None, reason=reason)
-
-        emb = discord.Embed(title="🔊 С участника снят мут", color=discord.Color.green())
-        emb.add_field(name="Модератор", value=ctx.author.mention)
-        emb.add_field(name="Участник", value=member.mention)
-        emb.add_field(name="Причина снятия", value=reason, inline=False)
-        
-        await ctx.send(embed=emb)
-    except Exception as e:
-        await ctx.send(f"❌ Ошибка при размуте: {e}")
-
-@client.command(name="warn")
+@admin_group.command(name="warn", help="Выдать варн участнику (!a warn @user [причина])")
 @commands.has_any_role("Scarletᵒʷⁿᵉʳ", "Co-Owner", "Curator", "Staff Manager")
-async def warn(ctx, member: discord.Member, *, reason: str = "Без причины"):
-    import json
-    import os
+async def admin_warn(ctx, member: discord.Member, *, reason: str = "Без причины"):
+    ensure_json_files()
     
-    warns_data = {}
-    if os.path.exists("warns.json"):
-        with open("warns.json", "r") as f:
-            warns_data = json.load(f)
+    with open("warns.json", "r", encoding="utf-8") as f:
+        warns_data = json.load(f)
 
     guild_id = str(ctx.guild.id)
     user_id = str(member.id)
@@ -242,118 +260,148 @@ async def warn(ctx, member: discord.Member, *, reason: str = "Без причи�
     if guild_id not in warns_data:
         warns_data[guild_id] = {}
 
-    current_warns = warns_data[guild_id].get(user_id, 0) + 1
-    warns_data[guild_id][user_id] = current_warns
+    if user_id not in warns_data[guild_id]:
+        warns_data[guild_id][user_id] = {"count": 0, "reasons": []}
 
-    with open("warns.json", "w") as f:
-        json.dump(warns_data, f, indent=4)
+    warns_data[guild_id][user_id]["count"] += 1
+    warns_data[guild_id][user_id]["reasons"].append(reason)
+    
+    current_warns = warns_data[guild_id][user_id]["count"]
+
+    with open("warns.json", "w", encoding="utf-8") as f:
+        json.dump(warns_data, f, indent=4, ensure_ascii=False)
 
     if current_warns >= 3:
-        warns_data[guild_id][user_id] = 0
-        with open("warns.json", "w") as f:
-            json.dump(warns_data, f, indent=4)
+        warns_data[guild_id][user_id] = {"count": 0, "reasons": []}
+        with open("warns.json", "w", encoding="utf-8") as f:
+            json.dump(warns_data, f, indent=4, ensure_ascii=False)
+            
+        try:
+            ban_duration_seconds = 5 * 86400
+            await member.ban(reason=f"Автоматический бан за 3/3 предупреждений. Последняя причина: {reason}")
 
-        staff_names = ["Main Administrator", "Administrator", "Moderator", "Main Support", "Advanced Support", "Support"]
-        roles_to_remove = [r for r in member.roles if r.name in staff_names]
-        
-        if roles_to_remove:
+            emb = discord.Embed(title="🔨 Автоматический временный бан", color=discord.Color.red())
+            emb.add_field(name="Администратор", value=ctx.author.mention, inline=True)
+            emb.add_field(name="Нарушитель", value=member.mention, inline=True)
+            emb.add_field(name="Срок бана", value="`5 дней` (3/3 варнов)", inline=False)
+            emb.add_field(name="Последняя причина", value=reason, inline=False)
+            emb.timestamp = datetime.datetime.utcnow()
+            await ctx.send(embed=emb)
+
+            await asyncio.sleep(ban_duration_seconds)
             try:
-                await member.remove_roles(*roles_to_remove)
-                emb = discord.Embed(title="📉 Снятие с должности", color=discord.Color.orange())
-                emb.add_field(name="Администратор", value=ctx.author.mention)
-                emb.add_field(name="Нарушитель", value=member.mention)
-                emb.add_field(name="Решение", value="Снят со всех должностей за 3/3 варна")
-                emb.add_field(name="Последняя причина", value=reason, inline=False)
-                await ctx.send(embed=emb)
-            except Exception as e:
-                await ctx.send(f"❌ Не удалось снять роли: {e}")
-        else:
-            try:
-                await ctx.guild.ban(member, reason="3/3 предупреждений")
-                emb = discord.Embed(title="🔨 Автоматический бан", color=discord.Color.red())
-                emb.add_field(name="Администратор", value=ctx.author.mention)
-                emb.add_field(name="Нарушитель", value=member.mention)
-                emb.add_field(name="Причина", value="Получение 3/3 предупреждений")
-                emb.add_field(name="Последняя причина", value=reason, inline=False)
-                await ctx.send(embed=emb)
-            except Exception as e:
-                await ctx.send(f"❌ Не удалось забанить пользователя: {e}")
+                await ctx.guild.unban(member, reason="Истек срок автоматического бана за 3/3 варнов")
+                un = discord.Embed(
+                    title="🕊️ Срок бана истек", 
+                    description=f"Пользователь {member.mention} был автоматически разбанен после 5 дней бана.", 
+                    color=discord.Color.green()
+                )
+                await ctx.send(embed=un)
+            except discord.NotFound:
+                pass
+
+        except Exception as e:
+            await ctx.send(f"❌ Не удалось забанить пользователя: {e}")
     else:
         emb = discord.Embed(title="⚠️ Выдано предупреждение", color=discord.Color.yellow())
-        emb.add_field(name="Администратор", value=ctx.author.mention)
-        emb.add_field(name="Нарушитель", value=member.mention)
-        emb.add_field(name="Причина", value=reason)
+        emb.add_field(name="Администратор", value=ctx.author.mention, inline=True)
+        emb.add_field(name="Нарушитель", value=member.mention, inline=True)
+        emb.add_field(name="Причина", value=reason, inline=False)
         emb.add_field(name="Предупреждения", value=f"`{current_warns}/3`", inline=False)
+        emb.timestamp = datetime.datetime.utcnow()
         await ctx.send(embed=emb)
 
-@client.command(name="unwarn")
+@admin_group.command(name="unwarn", help="Снять варн с участника (!a unwarn @user [причина снятия])")
 @commands.has_any_role("Scarletᵒʷⁿᵉʳ", "Co-Owner", "Curator", "Staff Manager")
-async def unwarn(ctx, member: discord.Member, *, reason: str = "Без причины"):
-    import json
-    import os
+async def admin_unwarn(ctx, member: discord.Member, *, reason: str = "Без причины"):
+    ensure_json_files()
     
-    warns_data = {}
-    if os.path.exists("warns.json"):
-        with open("warns.json", "r") as f:
-            warns_data = json.load(f)
+    with open("warns.json", "r", encoding="utf-8") as f:
+        warns_data = json.load(f)
 
     guild_id = str(ctx.guild.id)
     user_id = str(member.id)
 
-    current_warns = warns_data.get(guild_id, {}).get(user_id, 0)
-
-    if current_warns == 0:
+    if guild_id not in warns_data or user_id not in warns_data[guild_id]:
         await ctx.send(f"❌ У пользователя {member.mention} нет активных предупреждений!")
         return
 
-    new_warns = current_warns - 1
-    warns_data[guild_id][user_id] = new_warns
+    user_data = warns_data[guild_id][user_id]
 
-    with open("warns.json", "w") as f:
-        json.dump(warns_data, f, indent=4)
+    if isinstance(user_data, int):
+        count = user_data
+        reasons = []
+    else:
+        count = user_data.get("count", 0)
+        reasons = user_data.get("reasons", [])
 
-    emb = discord.Embed(title="✅ Снято предупреждение", color=discord.Color.green())
-    emb.add_field(name="Администратор", value=ctx.author.mention)
-    emb.add_field(name="Нарушитель", value=member.mention)
-    emb.add_field(name="Причина снятия", value=reason)
-    emb.add_field(name="Предупреждения", value=f"`{new_warns}/3`", inline=False)
-    await ctx.send(embed=emb)
-    
-@client.command(name="warn_list")
-@commands.has_any_role("Scarletᵒʷⁿᵉʳ", "Co-Owner", "Curator", "Staff Manager")
-async def warn_list(ctx):
-    import json
-    import os
-    
-    gid = str(ctx.guild.id)
-    
-    if not os.path.exists("warns.json"):
-        await ctx.send("Варнов пока нет.")
+    if count <= 0:
+        await ctx.send(f"❌ У пользователя {member.mention} нет активных предупреждений!")
         return
 
-    with open("warns.json", "r") as f:
+    count -= 1
+    if reasons:
+        reasons.pop()
+
+    warns_data[guild_id][user_id] = {
+        "count": count,
+        "reasons": reasons
+    }
+
+    with open("warns.json", "w", encoding="utf-8") as f:
+        json.dump(warns_data, f, indent=4, ensure_ascii=False)
+
+    emb = discord.Embed(title="✅ Снято предупреждение", color=discord.Color.green())
+    emb.add_field(name="Администратор", value=ctx.author.mention, inline=True)
+    emb.add_field(name="Нарушитель", value=member.mention, inline=True)
+    emb.add_field(name="Причина снятия", value=reason, inline=False)
+    emb.add_field(name="Осталось предупреждений", value=f"`{count}/3`", inline=False)
+    emb.timestamp = datetime.datetime.utcnow()
+    await ctx.send(embed=emb)
+    
+@admin_group.command(name="warn_list", aliases=["warn list"], help="Посмотреть список всех варнов на сервере (!a warn list)")
+@commands.has_any_role("Scarletᵒʷⁿᵉʳ", "Co-Owner", "Curator", "Staff Manager")
+async def admin_warn_list(ctx):
+    ensure_json_files()
+    gid = str(ctx.guild.id)
+    
+    with open("warns.json", "r", encoding="utf-8") as f:
         data = json.load(f)
     
     if gid not in data or not data[gid]:
-        await ctx.send("Варнов пока нет.")
+        await ctx.send("❌ На сервере пока нет активных варнов.")
         return
 
-    embed = discord.Embed(title="Список предупреждений", color=discord.Color.red())
+    embed = discord.Embed(title="📋 Список активных предупреждений", color=discord.Color.red())
     
     found = False
-    for uid, count in data[gid].items():
+    for uid, info in data[gid].items():
+        if isinstance(info, int):
+            count = info
+            reasons = ["Причина не указана"] * count
+        else:
+            count = info.get("count", 0)
+            reasons = info.get("reasons", [])
+
         if count > 0:
             member = ctx.guild.get_member(int(uid))
-            name = member.display_name if member else f"Пользователь {uid}"
-            embed.add_field(name=name, value=f"Предупреждений: {count}", inline=False)
+            mention = member.mention if member else f"Пользователь ID: {uid}"
+            
+            reasons_text = "\n".join([f"{i+1} варн за {rs}" for i, rs in enumerate(reasons)])
+            
+            embed.add_field(
+                name=f"{member.display_name if member else uid} ({count}/3)",
+                value=f"{mention}\n{reasons_text}",
+                inline=False
+            )
             found = True
     
     if not found:
-        await ctx.send("Варнов пока нет.")
+        await ctx.send("❌ На сервере пока нет активных варнов.")
     else:
         await ctx.send(embed=embed)
 
-@warn_list.error
+@admin_warn_list.error
 async def warn_list_error(ctx, error):
     if isinstance(error, commands.MissingAnyRole):
         await ctx.send("У вас нет прав для использования этой команды!")
@@ -362,7 +410,6 @@ async def warn_list_error(ctx, error):
 async def balance(ctx):
     file_path = "economy.json"
     
-    # Если файла нет или он пустой (0 байт), автоматически создаем его с пустым словарем
     if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump({}, f)
@@ -371,7 +418,6 @@ async def balance(ctx):
         try:
             data = json.load(f)
         except json.JSONDecodeError:
-            # Если файл вдруг поврежден, сбрасываем его в пустой словарь
             data = {}
             with open(file_path, "w", encoding="utf-8") as fw:
                 json.dump(data, fw)
@@ -2205,27 +2251,29 @@ async def setup_apply(ctx):
 
 
 
-COLOR_GIFS = [
+ZERO_GIFS = [
     "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdW5pMHdyenVibXNwd2tzNWx6ZTFidXB0ODdja3AzaTVndDRncnY3dyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Lq0h93752f6J9tijrh/giphy.gif",
-    "https://media.giphy.com/media/11UoE5sGTu978s/giphy.gif"
+    "https://media.giphy.com/media/11UoE5sGTu978s/giphy.gif",
+    "ССЫЛКА_НА_3_ГИФКУ.gif",
+    "ССЫЛКА_НА_4_ГИФКУ.gif",
+    "ССЫЛКА_НА_5_ГИФКУ.gif",
+    "ССЫЛКА_НА_6_ГИФКУ.gif",
+    "ССЫЛКА_НА_7_ГИФКУ.gif",
+    "ССЫЛКА_НА_8_ГИФКУ.gif"
 ]
 
-BW_GIFS = [
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3R6ZXpxZHk5NWh0dXJyd2xsazBka2g3cnd5NzhsZWpqcXNtbWNwaCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/k3m3z6rF609W/giphy.gif"
+PHRASES = [
+    "«Ты ведь не сбежишь от меня, да?..»",
+    "«Я чувствую твой пульс даже отсюда»",
+    "«Сладкий... ты опять смотрел на других?»",
+    "«Если ты умрёшь — я убью тебя сама»",
+    "«Помнишь тот день? Я помню всё»",
+    "«Ты — мой кусочек счастья... не потеряйся»",
+    "«Давай сбежим? Туда, где нет ни FRANXX, ни войны»",
+    "«...Ты тоже видишь этот сон?»"
 ]
 
 zero_data = {}
-
-PHRASES = [
-    {"text": "«Ты ведь не сбежишь от меня, да?..»", "type": "gentle", "weight": 15},
-    {"text": "«Я чувствую твой пульс даже отсюда»", "type": "playful", "weight": 15},
-    {"text": "«Сладкий... ты опять смотрел на других?»", "type": "gentle", "weight": 15},
-    {"text": "«Если ты умрёшь — я убью тебя сама»", "type": "sharp", "weight": 15},
-    {"text": "«Помнишь тот день? Я помню всё»", "type": "sad", "weight": 12.5},
-    {"text": "«Ты — мой кусочек счастья... не потеряйся»", "type": "gentle", "weight": 15},
-    {"text": "«Давай сбежим? Туда, где нет ни FRANXX, ни войны»", "type": "playful", "weight": 15},
-    {"text": "«...Ты тоже видишь этот сон?»", "type": "sad", "weight": 12.5},
-]
 
 async def restore_nickname(member: discord.Member, original_nick: str, delay: int = 900):
     await asyncio.sleep(delay)
@@ -2253,7 +2301,8 @@ async def zero(ctx, *, sub_command: str = None):
             "penalty": 0,
             "streak": 0,
             "last_used": 0,
-            "original_nick": ctx.author.display_name
+            "original_nick": ctx.author.display_name,
+            "current_index": 0  # С какого номера начинать (0 — первая фраза)
         }
 
     udata = zero_data[user_id]
@@ -2266,7 +2315,7 @@ async def zero(ctx, *, sub_command: str = None):
             description=f"{ctx.author.mention}, хмф! Раз так — я с тобой не разговариваю **5 минут**!",
             color=discord.Color.from_rgb(139, 0, 0)
         )
-        emb.set_image(url=random.choice(BW_GIFS))
+        emb.set_image(url=ZERO_GIFS[0])
         await ctx.send(embed=emb)
         return
 
@@ -2280,7 +2329,7 @@ async def zero(ctx, *, sub_command: str = None):
         )
         await ctx.send(embed=emb)
         return
-
+    
     if now < udata["cooldown"]:
         left = int(udata["cooldown"] - now)
         emb = discord.Embed(
@@ -2306,7 +2355,7 @@ async def zero(ctx, *, sub_command: str = None):
             description=f"{ctx.author.mention}\n\n*«Ты тоже ищешь меня в каждой жизни?»*",
             color=discord.Color.purple()
         )
-        emb.set_image(url=random.choice(COLOR_GIFS))
+        emb.set_image(url=ZERO_GIFS[0])
 
         role = discord.utils.get(ctx.guild.roles, name="Вечные")
         if not role:
@@ -2326,23 +2375,15 @@ async def zero(ctx, *, sub_command: str = None):
         await ctx.send(embed=emb)
         return
     
-    weights = [p["weight"] for p in PHRASES]
-    chosen = random.choices(PHRASES, weights=weights, k=1)[0]
-    p_type = chosen["type"]
+    index = udata["current_index"]
+    chosen_text = PHRASES[index]
+    chosen_gif = ZERO_GIFS[index]
     user_name = ctx.author.name
 
-    if p_type in ["gentle", "playful"]:
-        color = discord.Color.from_rgb(255, 182, 193)
-        gif = random.choice(COLOR_GIFS)
-        new_nick = f"Её пилот {user_name}"
-    elif p_type == "sharp":
-        color = discord.Color.red()
-        gif = random.choice(COLOR_GIFS)
-        new_nick = f"Под колпаком {user_name}"
-    else:
-        color = discord.Color.dark_gray()
-        gif = random.choice(BW_GIFS)
-        new_nick = f"Потерянный {user_name}"
+    udata["current_index"] = (index + 1) % len(PHRASES)
+
+    color = discord.Color.from_rgb(255, 182, 193)
+    new_nick = f"Её пилот {user_name}"
 
     try:
         await ctx.author.edit(nick=new_nick[:32])
@@ -2352,11 +2393,11 @@ async def zero(ctx, *, sub_command: str = None):
 
     emb = discord.Embed(
         title="🌸 Zero Two",
-        description=f"{ctx.author.mention}\n\n**{chosen['text']}**",
+        description=f"{ctx.author.mention}\n\n**{chosen_text}**",
         color=color
     )
-    emb.set_image(url=gif)
-    emb.set_footer(text=f"Прогресс серии: {udata['streak']}/5 | Кулдаун 30с")
+    emb.set_image(url=chosen_gif)
+    emb.set_footer(text=f"Фраза {index + 1}/8 | Прогресс серии: {udata['streak']}/5 | Кулдаун 30с")
     
     await ctx.send(embed=emb)
 
