@@ -407,42 +407,45 @@ async def warn_list_error(ctx, error):
         await ctx.send("У вас нет прав для использования этой команды!")
 
 @client.command(name="balance")
-async def balance(ctx):
+async def balance(ctx, member: discord.Member = None):
+    target = member or ctx.author
     file_path = "economy.json"
     
     if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
         with open(file_path, "w", encoding="utf-8") as f:
-            json.dump({}, f)
+            json.dump({}, f, ensure_ascii=False, indent=4)
 
     with open(file_path, "r", encoding="utf-8") as f:
         try:
             data = json.load(f)
         except json.JSONDecodeError:
             data = {}
-            with open(file_path, "w", encoding="utf-8") as fw:
-                json.dump(data, fw)
 
     guild_id = str(ctx.guild.id)
-    user_id = str(ctx.author.id)
+    user_id = str(target.id)
 
-    user_data = data.get(guild_id, {}).get(user_id, {})
-    
+    if guild_id not in data:
+        data[guild_id] = {}
+    if user_id not in data[guild_id]:
+        data[guild_id][user_id] = {"balance": 0, "bank": 0}
+
+    user_data = data[guild_id][user_id]
     cash = user_data.get("balance", 0)
     bank = user_data.get("bank", 0)
     total = cash + bank
 
     embed = discord.Embed(
-        title=f"Баланс {ctx.author.display_name}", 
+        title=f"Баланс {target.display_name}", 
         color=discord.Color.green()
     )
-    embed.set_thumbnail(url=ctx.author.display_avatar.url)
+    embed.set_thumbnail(url=target.display_avatar.url)
     
     embed.add_field(name="Кошелек", value=f"{cash:,}$", inline=False)
     embed.add_field(name="Банковский счет", value=f"{bank:,}$", inline=False)
     embed.add_field(name="Итого", value=f"{total:,}$", inline=False)
 
     await ctx.send(embed=embed)
-    
+
 @client.tree.command(name="deposit", description="Положить деньги в банк")
 async def deposit(interaction: discord.Interaction, amount: str):
     guild_id = str(interaction.guild_id)
