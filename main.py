@@ -247,7 +247,7 @@ async def clear_error(ctx, error):
         await ctx.send("У меня нет прав на управление сообщениями. Проверьте настройки канала/бота")
 
 @admin_group.command(name="warn", help="Выдать варн участнику (!a warn @user [причина])")
-@commands.has_any_role("Scarletᵒʷⁿᵉʳ", "Co-Owner", "Curator", "Staff Manager")
+@commands.has_any_role("/главные", " Server owners", "・Curator", "・Staff Manager")
 async def admin_warn(ctx, member: discord.Member, *, reason: str = "Без причины"):
     ensure_json_files()
     
@@ -312,7 +312,7 @@ async def admin_warn(ctx, member: discord.Member, *, reason: str = "Без пр�
         await ctx.send(embed=emb)
 
 @admin_group.command(name="unwarn", help="Снять варн с участника (!a unwarn @user [причина снятия])")
-@commands.has_any_role("Scarletᵒʷⁿᵉʳ", "Co-Owner", "Curator", "Staff Manager")
+@commands.has_any_role("/главные", " Server owners", "・Curator", "・Staff Manager")
 async def admin_unwarn(ctx, member: discord.Member, *, reason: str = "Без причины"):
     ensure_json_files()
     
@@ -360,7 +360,7 @@ async def admin_unwarn(ctx, member: discord.Member, *, reason: str = "Без п�
     await ctx.send(embed=emb)
     
 @admin_group.command(name="warn_list", aliases=["warn list"], help="Посмотреть список всех варнов на сервере (!a warn list)")
-@commands.has_any_role("Scarletᵒʷⁿᵉʳ", "Co-Owner", "Curator", "Staff Manager")
+@commands.has_any_role("/главные", " Server owners", "・Curator", "・Staff Manager")
 async def admin_warn_list(ctx):
     ensure_json_files()
     gid = str(ctx.guild.id)
@@ -2145,8 +2145,8 @@ class ApplicationModal(discord.ui.Modal):
         if not category:
             category = await guild.create_category("Анкеты")
         
-        curator = discord.utils.get(guild.roles, name="Curator")
-        manager = discord.utils.get(guild.roles, name="Staff Manager")
+        curator = discord.utils.get(guild.roles, name="・Curator")
+        manager = discord.utils.get(guild.roles, name="・Staff Manager")
         
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(read_messages=False),
@@ -2195,8 +2195,8 @@ async def ticket(ctx, action=None):
     if action != "close":
         return 
 
-    curator_role = discord.utils.get(ctx.guild.roles, name="Curator")
-    manager_role = discord.utils.get(ctx.guild.roles, name="Staff Manager")
+    curator_role = discord.utils.get(ctx.guild.roles, name="・Curator")
+    manager_role = discord.utils.get(ctx.guild.roles, name="・Staff Manager")
     
     is_authorized = ctx.author.guild_permissions.administrator
     if (curator_role and curator_role in ctx.author.roles) or (manager_role and manager_role in ctx.author.roles):
