@@ -362,16 +362,19 @@ async def warn_list_error(ctx, error):
 async def balance(ctx):
     file_path = "economy.json"
     
-    if not os.path.exists(file_path):
-        await ctx.send("База данных не найдена.")
-        return
+    # Если файла нет или он пустой (0 байт), автоматически создаем его с пустым словарем
+    if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump({}, f)
 
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         try:
             data = json.load(f)
         except json.JSONDecodeError:
-            await ctx.send("Ошибка чтения базы данных.")
-            return
+            # Если файл вдруг поврежден, сбрасываем его в пустой словарь
+            data = {}
+            with open(file_path, "w", encoding="utf-8") as fw:
+                json.dump(data, fw)
 
     guild_id = str(ctx.guild.id)
     user_id = str(ctx.author.id)
