@@ -2252,14 +2252,15 @@ async def setup_apply(ctx):
 
 
 ZERO_GIFS = [
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdW5pMHdyenVibXNwd2tzNWx6ZTFidXB0ODdja3AzaTVndDRncnY3dyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Lq0h93752f6J9tijrh/giphy.gif",
-    "https://media.giphy.com/media/11UoE5sGTu978s/giphy.gif",
-    "ССЫЛКА_НА_3_ГИФКУ.gif",
-    "ССЫЛКА_НА_4_ГИФКУ.gif",
-    "ССЫЛКА_НА_5_ГИФКУ.gif",
-    "ССЫЛКА_НА_6_ГИФКУ.gif",
-    "ССЫЛКА_НА_7_ГИФКУ.gif",
-    "ССЫЛКА_НА_8_ГИФКУ.gif"
+    "https://cdn.discordapp.com/attachments/1505813045249708144/1542980597184593940/bc11809c97271e15b7495b7ccd880ab7_1.gif?ex=6a93dce9&is=6a928b69&hm=e76eab60756985cb087eb8a52478c8fdd09f4f469a0a1292ea6d11b3b95b2b84&",
+    "https://cdn.discordapp.com/attachments/1505813045249708144/1542980621318750208/5583320e11154c207f54711a927e9526.gif?ex=6a93dcef&is=6a928b6f&hm=06a0c93492cc8cee69da149329a832592a17863314b78534c09ba8c2eae263c3&",
+    "https://cdn.discordapp.com/attachments/1505813045249708144/1542980780853297202/4db3008dea23de3f36b1d588b0f5f4df.gif?ex=6a93dd15&is=6a928b95&hm=394cd136b0d46c4c1534beb9aab984834e6d583cdce61e5c18ae6518690dd52c&",
+    "https://cdn.discordapp.com/attachments/1505813045249708144/1542980798641213553/cef569820773b0f5d54ee34cfa18e1f8.gif?ex=6a93dd19&is=6a928b99&hm=3e5fca11fc11468ef80660854d1e035ce6c6533817d81e81f16078ee0113e6db&",
+    "https://cdn.discordapp.com/attachments/1505813045249708144/1542981001817493626/zero-two.gif?ex=6a93dd4a&is=6a928bca&hm=f6f3760ba67da49f05b8890788887d3e808081f812c50f6b70806de9d57c0737&",
+    "https://cdn.discordapp.com/attachments/1505813045249708144/1542981252137623582/8677b01b4e5837808a3d4eae3d878557.gif?ex=6a93dd85&is=6a928c05&hm=2951bcb4fb9c8cc76c884c48805f998e9040958a0567dd0147c92e4c57ecbb53&",
+    "https://cdn.discordapp.com/attachments/1505813045249708144/1542981405594624100/bcc5acf6915f9da95b7c0641745a3a66.gif?ex=6a93ddaa&is=6a928c2a&hm=e76b43525cf90858051b6f550e23c2932e07a600bd43c32909dd1443e920b36e&",
+    "https://cdn.discordapp.com/attachments/1505813045249708144/1542981455964143738/071a36c7a48767b3a56465d712525a7a.gif?ex=6a93ddb6&is=6a928c36&hm=2eace3ccbc180601ad00f069b775c7a258d3ed44a22a69f8e8b4a3d60936c804&",
+    "https://cdn.discordapp.com/attachments/1505813045249708144/1542981508032110715/b4ddf4655b1cabc998d8efbc15fd7039.gif?ex=6a93ddc2&is=6a928c42&hm=3548c93980b7a622e9c882666997df8e9d21b2e2f146ce161aba71aea5803a77&"
 ]
 
 PHRASES = [
@@ -2270,7 +2271,8 @@ PHRASES = [
     "«Помнишь тот день? Я помню всё»",
     "«Ты — мой кусочек счастья... не потеряйся»",
     "«Давай сбежим? Туда, где нет ни FRANXX, ни войны»",
-    "«...Ты тоже видишь этот сон?»"
+    "«...Ты тоже видишь этот сон?»",
+    "«Ты тоже ищешь меня в каждой жизни?»"
 ]
 
 zero_data = {}
