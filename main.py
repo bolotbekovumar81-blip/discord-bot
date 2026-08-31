@@ -410,26 +410,25 @@ async def warn_list_error(ctx, error):
 async def balance(ctx, member: discord.Member = None):
     target = member or ctx.author
     file_path = "economy.json"
-    
-    if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+
+    if not os.path.exists(file_path):
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump({}, f, ensure_ascii=False, indent=4)
 
-    with open(file_path, "r", encoding="utf-8") as f:
+    data = {}
+    if os.path.getsize(file_path) > 0:
         try:
-            data = json.load(f)
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
         except json.JSONDecodeError:
             data = {}
 
     guild_id = str(ctx.guild.id)
     user_id = str(target.id)
 
-    if guild_id not in data:
-        data[guild_id] = {}
-    if user_id not in data[guild_id]:
-        data[guild_id][user_id] = {"balance": 0, "bank": 0}
-
-    user_data = data[guild_id][user_id]
+    guild_data = data.get(guild_id, {})
+    user_data = guild_data.get(user_id, {"balance": 0, "bank": 0})
+    
     cash = user_data.get("balance", 0)
     bank = user_data.get("bank", 0)
     total = cash + bank
