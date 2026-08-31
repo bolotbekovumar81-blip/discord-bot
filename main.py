@@ -2530,6 +2530,7 @@ async def marry(ctx):
 pending_proposals = {}
 divorce_requests = {}
 user_cooldowns = {}
+married_users = {}
 
 MARRY_FILE = "marry.json"
 
@@ -2594,9 +2595,9 @@ async def marry_menu(ctx, member: discord.Member = None):
             f"{bar}\n"
             f"({points}/{needed_points})\n\n"
             f"💍 Партнер 1\n"
-            f"{target.mention} ♀️\n\n"
+            f"{target.mention}\n\n"
             f"💍 Партнер 2\n"
-            f"{spouse_member.mention if spouse_member else '<@' + spouse_id + '>'} ♂️\n\n"
+            f"{spouse_member.mention if spouse_member else '<@' + spouse_id + '>'}\n\n"
             f"📈 Уровень\n"
             f"{level}\n\n"
             f"❤️ Очки Любви\n"
@@ -2606,9 +2607,10 @@ async def marry_menu(ctx, member: discord.Member = None):
             f"👥 Дети\n"
             f"{child_text}"
         ),
-        color=discord.Color.from_rgb(255, 105, 180)
+        color=discord.Color.from_rgb(30, 30, 35)
     )
     emb.set_thumbnail(url=target.display_avatar.url)
+    emb.set_footer(text="Система Семьи • Vexa Project")
     await ctx.send(embed=emb)
 
 @marry.command(name="kiss")
@@ -2708,11 +2710,11 @@ async def marry_slap(ctx, member: discord.Member):
 
 @marry.command(name="divorce")
 async def marry_divorce(ctx):
-    data = load_marry_data()
     user_id = str(ctx.author.id)
+    data = load_marry_data()
 
     if user_id not in data or not data[user_id].get("spouse"):
-        await ctx.send("Вы не состоите в браке.")
+        await ctx.send(f"{ctx.author.mention}, вы и так не состоите в браке.")
         return
 
     spouse_id = data[user_id]["spouse"]
@@ -2721,55 +2723,135 @@ async def marry_divorce(ctx):
         divorce_requests[user_id] = spouse_id
 
     if spouse_id in divorce_requests and divorce_requests[spouse_id] == user_id:
-        if user_id in data: del data[user_id]
-        if spouse_id in data: del data[spouse_id]
+        data[user_id]["spouse"] = None
+        data[user_id]["level"] = 1
+        data[user_id]["love_points"] = 0
+        data[user_id]["date"] = None
+        data[user_id]["child"] = None
+
+        if spouse_id in data:
+            data[spouse_id]["spouse"] = None
+            data[spouse_id]["level"] = 1
+            data[spouse_id]["love_points"] = 0
+            data[spouse_id]["date"] = None
+            data[spouse_id]["child"] = None
+
         save_marry_data(data)
 
         divorce_requests.pop(user_id, None)
         divorce_requests.pop(spouse_id, None)
 
-        await ctx.send("💔 Брак был расторгнут по обоюдному согласию сторон.")
+        partner = ctx.guild.get_member(int(spouse_id))
+        partner_name = partner.mention if partner else "Бывший партнер"
+
+        await ctx.send(f"💔 {ctx.author.mention} и {partner_name} развелись по обоюдному согласию сторон.")
     else:
-        await ctx.send(f"⚠️ Вы запросили развод. Ваш партнер должен тоже написать `!marry divorce`, чтобы подтвердить расторжение брака.")
+        partner = ctx.guild.get_member(int(spouse_id))
+        partner_name = partner.mention if partner else "Партнер"
+        await ctx.send(f"{ctx.author.mention}, вы запросили развод. {partner_name} должен тоже написать `!marry divorce`, чтобы подтвердить расторжение брака.")
 
 @marry.command(name="deny")
-async def marry_deny(ctx):
-    user_id = str(ctx.author.id)
-    if user_id not in pending_proposals:
-        await ctx.send("У вас нет активных предложений о браке.")
+async def marry_deny(ctx, member: discord.Member = None):
+    if member is None:
+        user_id = str(ctx.author.id)
+        if user_id not in pending_proposals:
+            await ctx.send(f"{ctx.author.mention}, у вас нет активных предложений о браке.")
+            return
+
+        proposal = pending_proposals[user_id]
+        if time.time() - proposal["time"] > 180:
+            del pending_proposals[user_id]
+            await ctx.send(f"{ctx.author.mention}, время предложения истекло.")
+            return
+
+        proposer_id = proposal["proposer"]
+        del pending_proposals[user_id]
+
+        proposer_member = ctx.guild.get_member(int(proposer_id))
+        p_name = proposer_member.mention if proposer_member else "Пользователь"
+        
+        await ctx.send(f"{ctx.author.mention} отклонил(а) предложение руки и сердца от {p_name}.")
         return
 
-    del pending_proposals[user_id]
-    await ctx.send(f"{ctx.author.mention} отклонил(а) предложение о браке. 💔")
+    proposal_key = (ctx.author.id, member.id)
+
+    if proposal_key not in pending_proposals:
+        await ctx.send(f"{ctx.author.mention}, у вас нет активного предложения от {member.mention}.")
+        return
+
+    del pending_proposals[proposal_key]
+    await ctx.send(f"{ctx.author.mention} отклонил(а) предложение руки и сердца от {member.mention}.")
 
 @marry.command(name="accept")
-async def marry_accept(ctx):
-    user_id = str(ctx.author.id)
-    if user_id not in pending_proposals:
-        await ctx.send("У вас нет активных предложений о браке.")
-        return
+async def marry_accept(ctx, member: discord.Member = None):
+    if member is None:
+        user_id = str(ctx.author.id)
+        if user_id not in pending_proposals:
+            await ctx.send(f"{ctx.author.mention}, у вас нет активных предложений о браке.")
+            return
 
-    proposal = pending_proposals[user_id]
-    if time.time() - proposal["time"] > 180:
+        proposal = pending_proposals[user_id]
+        if time.time() - proposal["time"] > 180:
+            del pending_proposals[user_id]
+            await ctx.send(f"{ctx.author.mention}, время предложения истекло (прошло больше 3 минут).")
+            return
+
+        proposer_id = proposal["proposer"]
         del pending_proposals[user_id]
-        await ctx.send("Время предложения истекло (прошло больше 3 минут).")
+
+        data = load_marry_data()
+        date_str = datetime.now().strftime("%d %B %Y г.")
+
+        data[proposer_id] = {
+            "spouse": user_id,
+            "level": 1,
+            "love_points": 0,
+            "date": date_str,
+            "child": None
+        }
+        data[user_id] = {
+            "spouse": proposer_id,
+            "level": 1,
+            "love_points": 0,
+            "date": date_str,
+            "child": None
+        }
+        save_marry_data(data)
+
+        proposer_member = ctx.guild.get_member(int(proposer_id))
+        p_name = proposer_member.mention if proposer_member else "Партнер"
+        
+        embed = discord.Embed(
+            title="Свадьба",
+            description=f"Поздравляем! {p_name} и {ctx.author.mention} теперь официально в браке!",
+            color=discord.Color.gold()
+        )
+        await ctx.send(embed=embed)
+        return
+    
+    proposal_key = (ctx.author.id, member.id)
+
+    if proposal_key not in pending_proposals:
+        await ctx.send(f"{ctx.author.mention}, у вас нет активного предложения от {member.mention} (возможно, оно просрочено).")
         return
 
-    proposer_id = proposal["proposer"]
-    del pending_proposals[user_id]
+    del pending_proposals[proposal_key]
 
     data = load_marry_data()
     date_str = datetime.now().strftime("%d %B %Y г.")
+    
+    author_id_str = str(ctx.author.id)
+    member_id_str = str(member.id)
 
-    data[proposer_id] = {
-        "spouse": user_id,
+    data[author_id_str] = {
+        "spouse": member_id_str,
         "level": 1,
         "love_points": 0,
         "date": date_str,
         "child": None
     }
-    data[user_id] = {
-        "spouse": proposer_id,
+    data[member_id_str] = {
+        "spouse": author_id_str,
         "level": 1,
         "love_points": 0,
         "date": date_str,
@@ -2777,33 +2859,54 @@ async def marry_accept(ctx):
     }
     save_marry_data(data)
 
-    proposer_member = ctx.guild.get_member(int(proposer_id))
-    p_name = proposer_member.mention if proposer_member else "Партнер"
-    await ctx.send(f"🎉 Поздравляем! {p_name} и {ctx.author.mention} теперь официально в браке! 💖")
+    embed = discord.Embed(
+        title="Свадьба",
+        description=f"{member.mention} и {ctx.author.mention} официально заключили узы брака! Поздравляем!",
+        color=discord.Color.gold()
+    )
+    await ctx.send(embed=embed)
 
 @marry.command(name="propose")
 async def marry_propose(ctx, member: discord.Member):
-    if member == ctx.author or member.bot:
-        await ctx.send("Нельзя сделать предложение самому себе или боту!")
+    if member == ctx.author:
+        await ctx.send(f"{ctx.author.mention}, вы не можете сделать предложение самому себе!")
+        return
+    
+    if member.bot:
+        await ctx.send(f"{ctx.author.mention}, нельзя жениться на боте!")
         return
 
-    data = load_marry_data()
-    author_id = str(ctx.author.id)
-    target_id = str(member.id)
-
-    if author_id in data and data[author_id].get("spouse"):
-        await ctx.send("У тебя уже есть пара!")
-        return
-    if target_id in data and data[target_id].get("spouse"):
-        await ctx.send("У этого пользователя уже есть пара!")
+    if ctx.author.id in married_users or member.id in married_users:
+        await ctx.send(f"{ctx.author.mention}, кто-то из вас уже состоит в браке!")
         return
 
-    pending_proposals[target_id] = {
-        "proposer": author_id,
-        "time": time.time()
-    }
+    proposal_key = (member.id, ctx.author.id)
+    pending_proposals[proposal_key] = True
 
-    await ctx.send(f"💍 {member.mention}, вам сделал предложение пользователь {ctx.author.mention}! У вас есть **3 минуты**, чтобы ответить `!marry accept` или `!marry deny`.")
+    embed = discord.Embed(
+        title="Союз Двух Душ",
+        description=(
+            f"{ctx.author.mention} делает предложение руки и сердца **{member.mention}**!\n\n"
+            f"Что выберешь ты, {member.mention}?\n"
+            f"  ▫ Принять узы: `!marry accept {ctx.author.name}`\n"
+            f"  ▫ Отвергнуть: `!marry deny {ctx.author.name}`\n\n"
+            f"⏳ Эхо этого предложения затихнет через 3 минуты."
+        ),
+        color=discord.Color.from_rgb(30, 30, 35)
+    )
+    embed.set_thumbnail(url=ctx.author.display_avatar.url)
+    embed.set_footer(text="Система Семьи • Vexa Project")
+    
+    await ctx.send(f"{member.mention}", embed=embed)
+
+    await asyncio.sleep(180)
+
+    if proposal_key in pending_proposals:
+        del pending_proposals[proposal_key]
+        try:
+            await ctx.send(f"⏳ Время предложения от {ctx.author.mention} для {member.mention} истекло (прошло больше 3 минут).")
+        except:
+            pass
 
 LEVEL_REQUIREMENTS = {
     1: 15,
@@ -2861,22 +2964,58 @@ child_proposals = {}
 
 @marry.group(name="child", invoke_without_command=True)
 async def marry_child(ctx):
-    await ctx.send("Используй: `!marry child guardianship @user`, `!marry child g accept`, `!marry child g deny`")
+    await ctx.send(f"{ctx.author.mention}, используйте: `!marry child guardianship @user`, `!marry child g accept` или `!marry child g deny`")
 
 @marry_child.command(name="guardianship")
 async def child_guardianship(ctx, member: discord.Member):
     data = load_marry_data()
     user_id = str(ctx.author.id)
+    
     if user_id not in data or not data[user_id].get("spouse"):
-        await ctx.send("У вас нет семьи, чтобы взять ребенка под опеку.")
+        await ctx.send(f"{ctx.author.mention}, у вас нет семьи, чтобы взять ребенка под опеку.")
+        return
+
+    if member == ctx.author:
+        await ctx.send(f"{ctx.author.mention}, вы не можете усыновить самого себя!")
+        return
+
+    if member.bot:
+        await ctx.send(f"{ctx.author.mention}, нельзя взять в семью бота!")
         return
 
     target_id = str(member.id)
+    
+    if target_id in data and data[target_id].get("child"):
+        await ctx.send(f"{member.mention}, этот пользователь уже состоит в какой-то семье в качестве ребенка.")
+        return
+
+    spouse_id = data[user_id]["spouse"]
+
     child_proposals[target_id] = {
         "parent": user_id,
+        "spouse": spouse_id,
         "time": time.time()
     }
-    await ctx.send(f"👶 {member.mention}, семейная пара предлагает вам стать их ребенком под опекой! У вас есть **3 минуты**, чтобы написать `!marry child g accept` или `!marry child g deny`.")
+    
+    spouse_member = ctx.guild.get_member(int(spouse_id))
+    spouse_name = spouse_member.mention if spouse_member else "Второй партнер"
+
+    embed = discord.Embed(
+        title="🍼 • Новая Семейная Веточка",
+        description=(
+            f"Тепло домашнего очага манит...\n\n"
+            f"👶 Семейная пара в составе **{ctx.author.mention}** и **{spouse_name}** предлагает **{member.mention}** стать их ребёнком под опекой.\n\n"
+            f"〄 **Как ответить?**\n"
+            f"  ▫️ Принять опеку: `!marry child g accept`\n"
+            f"  ▫️ Отказаться: `!marry child g deny`\n\n"
+            f"⏳ *Предложение действительно в течение 3 минут.*"
+        ),
+        color=discord.Color.from_rgb(30, 30, 35)
+    )
+    embed.set_thumbnail(url=ctx.author.display_avatar.url)
+    embed.set_footer(text="Система Семьи • Vexa Project")
+
+    await ctx.send(f"{member.mention}", embed=embed)
 
 @marry_child.command(name="g")
 async def child_g_sub(ctx, action: str):
