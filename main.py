@@ -2750,6 +2750,7 @@ async def marry_divorce(ctx):
 
 @marry.command(name="deny")
 async def marry_deny(ctx, member: discord.Member = None):
+    global pending_proposals
     user_id = str(ctx.author.id)
 
     if user_id not in pending_proposals:
@@ -2785,6 +2786,7 @@ async def marry_deny(ctx, member: discord.Member = None):
 
 @marry.command(name="accept")
 async def marry_accept(ctx, member: discord.Member = None):
+    global pending_proposals
     user_id = str(ctx.author.id)
 
     if user_id not in pending_proposals:
@@ -2844,6 +2846,7 @@ async def marry_accept(ctx, member: discord.Member = None):
 
 @marry.command(name="propose")
 async def marry_propose(ctx, member: discord.Member):
+    global pending_proposals
     if member.bot:
         await ctx.send("Нельзя сделать предложение боту!")
         return
