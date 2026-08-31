@@ -51,6 +51,21 @@ PROFIT_PER_HOUR = {
     3: 50000
 }
 
+PENDING_FILE = "marry_pending.json"
+
+def load_pending():
+    if not os.path.exists(PENDING_FILE):
+        return {}
+    try:
+        with open(PENDING_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_pending(data):
+    with open(PENDING_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
 class Client(commands.Bot):
     async def on_message(self, message):
         if message.author == self.user:
@@ -2750,11 +2765,12 @@ async def marry_divorce(ctx):
 
 @marry.command(name="deny")
 async def marry_deny(ctx, member: discord.Member = None):
-    global pending_proposals
     user_id = str(ctx.author.id)
 
-    if user_id not in pending_proposals:
-        is_proposer = any(p["proposer"] == user_id for p in pending_proposals.values())
+    pending = load_pending()
+
+    if user_id not in pending:
+        is_proposer = any(p["proposer"] == user_id for p in pending.values())
         if is_proposer:
             await ctx.send(f"{ctx.author.mention}, вы не можете отклонить предложение, которое сами же и сделали!")
             return
@@ -2765,10 +2781,11 @@ async def marry_deny(ctx, member: discord.Member = None):
             await ctx.send(f"{ctx.author.mention}, у вас нет активных предложений о браке.")
         return
 
-    proposal = pending_proposals[user_id]
+    proposal = pending[user_id]
 
     if time.time() - proposal["time"] > 180:
-        del pending_proposals[user_id]
+        del pending[user_id]
+        save_pending(pending)
         await ctx.send(f"{ctx.author.mention}, время предложения истекло.")
         return
 
@@ -2777,7 +2794,8 @@ async def marry_deny(ctx, member: discord.Member = None):
         return
 
     proposer_id = proposal["proposer"]
-    del pending_proposals[user_id]
+    del pending[user_id]
+    save_pending(pending)
 
     proposer_member = ctx.guild.get_member(int(proposer_id))
     p_name = proposer_member.mention if proposer_member else "Пользователь"
@@ -2786,11 +2804,12 @@ async def marry_deny(ctx, member: discord.Member = None):
 
 @marry.command(name="accept")
 async def marry_accept(ctx, member: discord.Member = None):
-    global pending_proposals
     user_id = str(ctx.author.id)
 
-    if user_id not in pending_proposals:
-        is_proposer = any(p["proposer"] == user_id for p in pending_proposals.values())
+    pending = load_pending()
+
+    if user_id not in pending:
+        is_proposer = any(p["proposer"] == user_id for p in pending.values())
         if is_proposer:
             await ctx.send(f"{ctx.author.mention}, вы не можете принять предложение, которое сами же и сделали!")
             return
@@ -2801,10 +2820,11 @@ async def marry_accept(ctx, member: discord.Member = None):
             await ctx.send(f"{ctx.author.mention}, у вас нет активных предложений о браке.")
         return
 
-    proposal = pending_proposals[user_id]
+    proposal = pending[user_id]
 
     if time.time() - proposal["time"] > 180:
-        del pending_proposals[user_id]
+        del pending[user_id]
+        save_pending(pending)
         await ctx.send(f"{ctx.author.mention}, время предложения истекло (прошло больше 3 минут).")
         return
 
@@ -2813,7 +2833,8 @@ async def marry_accept(ctx, member: discord.Member = None):
         return
 
     proposer_id = proposal["proposer"]
-    del pending_proposals[user_id]
+    del pending[user_id]
+    save_pending(pending)
 
     data = load_marry_data()
     date_str = datetime.now().strftime("%d %B %Y г.")
@@ -2833,7 +2854,7 @@ async def marry_accept(ctx, member: discord.Member = None):
         "child": None
     }
     save_marry_data(data)
-
+    
     proposer_member = ctx.guild.get_member(int(proposer_id))
     p_name = proposer_member.mention if proposer_member else "Партнер"
 
@@ -2846,7 +2867,6 @@ async def marry_accept(ctx, member: discord.Member = None):
 
 @marry.command(name="propose")
 async def marry_propose(ctx, member: discord.Member):
-    global pending_proposals
     if member.bot:
         await ctx.send("Нельзя сделать предложение боту!")
         return
@@ -2857,10 +2877,14 @@ async def marry_propose(ctx, member: discord.Member):
     proposer_id = str(ctx.author.id)
     target_id = str(member.id)
 
-    pending_proposals[target_id] = {
+    pending = load_pending()
+
+    pending[target_id] = {
         "proposer": proposer_id,
         "time": time.time()
     }
+
+    save_pending(pending)
 
     embed = discord.Embed(
         title="Союз двух душ",
