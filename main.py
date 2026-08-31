@@ -16,6 +16,10 @@ from openai import AsyncOpenAI
 
 pending_invites = {}
 pending_actions = {}
+pending_proposals = {}
+divorce_requests = {}
+user_cooldowns = {}
+married_users = {}
 
 LOG_CHANNEL_ID = 1514982915921150083
 MUTE_ROLE_ID = 1514982507014131828
@@ -2525,11 +2529,6 @@ async def sex_cmd(ctx, member: discord.Member):
 @client.group(name="marry", invoke_without_command=True)
 async def marry(ctx):
     await ctx.send(f"{ctx.author.mention}, используй: `!marry menu`, `!marry propose @user`, `!marry accept`, `!marry deny`, `!marry divorce`, `!marry level up`, `!marry level info`, `!marry child guardianship @user`")
-
-pending_proposals = {}
-divorce_requests = {}
-user_cooldowns = {}
-married_users = {}
 
 MARRY_FILE = "marry.json"
 
