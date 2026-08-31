@@ -2754,6 +2754,11 @@ async def marry_deny(ctx, member: discord.Member = None):
     user_id = str(ctx.author.id)
 
     if user_id not in pending_proposals:
+        is_proposer = any(p["proposer"] == user_id for p in pending_proposals.values())
+        if is_proposer:
+            await ctx.send(f"{ctx.author.mention}, вы не можете отклонить предложение, которое сами же и сделали!")
+            return
+
         if member:
             await ctx.send(f"{ctx.author.mention}, у вас нет активного предложения от {member.mention}.")
         else:
@@ -2784,6 +2789,11 @@ async def marry_accept(ctx, member: discord.Member = None):
     user_id = str(ctx.author.id)
 
     if user_id not in pending_proposals:
+        is_proposer = any(p["proposer"] == user_id for p in pending_proposals.values())
+        if is_proposer:
+            await ctx.send(f"{ctx.author.mention}, вы не можете принять предложение, которое сами же и сделали!")
+            return
+
         if member:
             await ctx.send(f"{ctx.author.mention}, у вас нет активного предложения от {member.mention}.")
         else:
@@ -2835,42 +2845,31 @@ async def marry_accept(ctx, member: discord.Member = None):
 
 @marry.command(name="propose")
 async def marry_propose(ctx, member: discord.Member):
-    if member == ctx.author:
-        await ctx.send(f"{ctx.author.mention}, вы не можете сделать предложение самому себе!")
-        return
-    
     if member.bot:
-        await ctx.send(f"{ctx.author.mention}, нельзя жениться на боте!")
+        await ctx.send("Нельзя сделать предложение боту!")
+        return
+    if member.id == ctx.author.id:
+        await ctx.send("Нельзя сделать предложение самому себе!")
         return
 
-    data = load_marry_data()
-    author_id = str(ctx.author.id)
+    proposer_id = str(ctx.author.id)
     target_id = str(member.id)
 
-    if (author_id in data and data[author_id].get("spouse")) or (target_id in data and data[target_id].get("spouse")):
-        await ctx.send(f"{ctx.author.mention}, кто-то из вас уже состоит в браке!")
-        return
-
     pending_proposals[target_id] = {
-        "proposer": author_id,
+        "proposer": proposer_id,
         "time": time.time()
     }
 
     embed = discord.Embed(
-        title="Союз Двух Душ",
-        description=(
-            f"{ctx.author.mention} делает предложение руки и сердца **{member.mention}**!\n\n"
-            f"Что выберешь ты, {member.mention}?\n"
-            f"  ▫ Принять узы: `!marry accept`\n"
-            f"  ▫ Отвергнуть: `!marry deny`\n\n"
-            f"⏳ Эхо этого предложения затихнет через 3 минуты."
-        ),
-        color=discord.Color.from_rgb(30, 30, 35)
+        title="Союз двух душ",
+        description=f"{ctx.author.mention} делает предложение руки и сердца {member.mention}!\n\n"
+                    f"Что выберешь ты, {member.mention}?\n"
+                    f"▫️ Принять узы: `!marry accept`\n"
+                    f"▫️ Отвергнуть: `!marry deny`\n\n"
+                    f"⏳ Эпоха этого предложения затихнет через 3 минуты.",
+        color=discord.Color.magenta()
     )
-    embed.set_thumbnail(url=ctx.author.display_avatar.url)
-    embed.set_footer(text="Система Семьи • Vexa Project")
-    
-    await ctx.send(f"{member.mention}", embed=embed)
+    await ctx.send(embed=embed)
 
 LEVEL_REQUIREMENTS = {
     1: 15,
